@@ -1,0 +1,16 @@
+
+
+type Query {
+  # "return Tags Array using paginator methods"
+  getMessages(limit: Int): [String]
+}
+
+type Mutation{
+  "Send Message"
+  sendMessage(msg: String): String
+}
+
+type Subscription {
+  "Executed when a message is sent by someone"
+  onNewMsgArrived: String
+}
