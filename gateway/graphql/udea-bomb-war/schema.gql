@@ -1,16 +1,43 @@
 
 
+type Location{
+  xPx: Int
+  yPx: Int
+  xTile: Int
+  yTile: Int
+}
+
+type Bomb{
+  _id: String
+  placed: BigInt
+  exploit: BigInt
+  location: Location
+}
+
+type Player {
+  _id: String
+  location: Location,
+  name: String,
+  image: String
+  state: String
+}
+
 type Query {
   # "return Tags Array using paginator methods"
   getMessages(limit: Int): [String]
 }
 
 type Mutation{
-  "Send Message"
-  sendMessage(msg: String): String
+  "Place a bomb"
+  placeBomb(bomb: Bomb): Int
 }
 
+
 type Subscription {
-  "Executed when a message is sent by someone"
-  onNewMsgArrived: String
+  "Listen bomb Placed on map by others players"
+  listenPlacedBombs: [Bomb]
+
+  "listen player game over"
+  playerUpdates: [Player]
+
 }

@@ -7,9 +7,13 @@ import {
   sendMessage,
   onMessageArriveSubscription
 } from './gql/udeaBombWar.js';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class UdeaBombWarService {
+
+  screenSizeChanged$ = new BehaviorSubject(undefined);
+  commands$ = new BehaviorSubject(undefined);
 
   constructor(
      private gateway: GatewayService
@@ -42,6 +46,10 @@ export class UdeaBombWarService {
     .subscribe({
       query: onMessageArriveSubscription
     });
+  }
+
+  publishSizeChangedEvent(width, height){
+    this.screenSizeChanged$.next({width, height})
   }
 
 

@@ -38,10 +38,10 @@ module.exports = {
 
   //// MUTATIONS ///////
   Mutation: {
-    sendMessage(root, args, context) {
+    placeBomb(root, args, context) {
       return context.broker.forwardAndGetReply$(
-        "ChatMessage",
-        "gateway.graphql.mutation.sendMessage",
+        "bomb",
+        "gateway.graphql.mutation.placeBomb",
         { root, args, jwt: context.encodedToken },
         2000
       )
@@ -53,24 +53,43 @@ module.exports = {
   },
   // SUBSCRIPTIONS ///////
   Subscription: {
-    onNewMsgArrived: {
+    listenPlacedBombs: {
       subscribe: withFilter(
         (payload, variables, context, info) => {
-          return pubsub.asyncIterator("onNewMsgArrived");
+          return pubsub.asyncIterator("listenPlacedBombs");
         },
         (payload, variables, context, info) => {
           return true;
         }
       )
-    }
+    },
+    playerUpdates: {
+      subscribe: withFilter(
+        (payload, variables, context, info) => {
+          return pubsub.asyncIterator("playerUpdates");
+        },
+        (payload, variables, context, info) => {
+          return true;
+        }
+      )
+    },
+
+
   }
 };
 
 //// SUBSCRIPTIONS SOURCES ////
 const eventDescriptors = [
   {
-    backendEventName: 'onNewMsgArrived',
-    gqlSubscriptionName: 'onNewMsgArrived',
+    backendEventName: 'bombPlacedOnMap',
+    gqlSubscriptionName: 'listenPlacedBombs',
+    //dataExtractor: (evt) => evt.data,// OPTIONAL, only use if needed
+    //onError: (error, descriptor) => console.log(`Error processing ${descriptor.backendEventName}`),// OPTIONAL, only use if needed
+    //onEvent: (evt, descriptor) => console.log(`Event of type  ${descriptor.backendEventName} arraived: ${JSON.stringify(evt)}`),// OPTIONAL, only use if needed
+  },
+  {
+    backendEventName: 'playerUpdated',
+    gqlSubscriptionName: 'playerUpdates',
     //dataExtractor: (evt) => evt.data,// OPTIONAL, only use if needed
     //onError: (error, descriptor) => console.log(`Error processing ${descriptor.backendEventName}`),// OPTIONAL, only use if needed
     //onEvent: (evt, descriptor) => console.log(`Event of type  ${descriptor.backendEventName} arraived: ${JSON.stringify(evt)}`),// OPTIONAL, only use if needed
