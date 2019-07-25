@@ -13,9 +13,8 @@ let instance;
 class UserEventConsumer {
     constructor() { }
     
-    handleAnonymousMessageArrived$(evt){
-        return UdeaBombWarDA.saveMessageSent$(evt.data.msg, evt.timestamp)
-        .mergeMap(() => broker.send$(MATERIALIZED_VIEW_TOPIC, 'onNewMsgArrived', evt.data.msg))
+    handlenewPlayerArrived$({data}){
+        return broker.send$(MATERIALIZED_VIEW_TOPIC, 'playerUpdated', data)
     }
 }
 

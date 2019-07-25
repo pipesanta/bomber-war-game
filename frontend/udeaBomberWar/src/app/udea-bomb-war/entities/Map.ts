@@ -12,7 +12,7 @@ export class Map {
   tilesInWidth: number;
   tilesInHeight: number;
   rectanglesPositions: any[];
-  rectanglescollisions: any[];
+  rectanglesCollisions: any[];
   mapLimit: Rectangle;
   mapImagePath: any;
   loadLayers: (datosCapas: any) => void;
@@ -45,7 +45,9 @@ export class Map {
     this.tilesWidth = parseInt(jsonObject.tilewidth, 10);
     this.tilesHeight = parseInt(jsonObject.tileheight, 10);
 
-    this.rectanglescollisions = [];
+    
+
+    this.rectanglesCollisions = [];
     this.rectanglesPositions = [];
     // rectangulos escaleras
 
@@ -66,9 +68,8 @@ export class Map {
 Map.prototype.loadLayers = function (layers) {
   for (let i = 0; i < layers.length; i++) {
     if (layers[i].name === 'colisiones') {
-      console.log('------------- capa colisiones');
       for (let c = 0; c < layers[i].objects.length; c++) {
-        this.rectanglescollisions.push(new Rectangle(
+        this.rectanglesCollisions.push(new Rectangle(
           layers[i].objects[c].x, layers[i].objects[c].y,
           layers[i].objects[c].width, layers[i].objects[c].height, 'colision'
         ));
@@ -99,8 +100,8 @@ Map.prototype.loadItemsOnMap = function () {
   document.getElementById(idHTML).style.outline = '1px solid transparent';
 
   let htmlCollisions = '';
-  for (let c = 0; c < this.rectanglescollisions.length; c++) {
-    htmlCollisions += this.rectanglescollisions[c].html;
+  for (let c = 0; c < this.rectanglesCollisions.length; c++) {
+    htmlCollisions += this.rectanglesCollisions[c].html;
   }
   document.getElementById('colisiones').innerHTML = htmlCollisions;
 
@@ -141,14 +142,14 @@ Map.prototype.draw = function () {
   document.getElementById('mapa').style.transform = 'translate3d(' + this.posicion.x + 'px, ' + this.posicion.y + 'px, 0' + ')';
 
   // if(debug.debugging) {
-  // 	for (let rc = 0; rc < this.rectangulosColisiones.length; rc++) {
-  // 		this.rectangulosColisiones[rc].mover(this.posicion.x, this.posicion.y);
-  // 	}
+  	// for (let rc = 0; rc < this.rectanglesCollisions.length; rc++) {
+  	// 	this.rectanglesCollisions[rc].move(this.position.x, this.position.y);
+  	// }
 
-  // 	for (let rl = 0; rl < this.rectangulosLocalizaciones.length; rl++) {
-  // 		this.rectangulosLocalizaciones[rl].rectangulo.mover(this.posicion.x, this.posicion.y);
-  // 	}
+  	// for (let rl = 0; rl < this.rectangulosLocalizaciones.length; rl++) {
+  	// 	this.rectangulosLocalizaciones[rl].rectangulo.mover(this.posicion.x, this.posicion.y);
+  	// }
 
-  // 	//bloque dibujado escaleras
+  	//bloque dibujado escaleras
   // }
 };

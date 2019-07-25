@@ -9,7 +9,7 @@ export class Rectangle {
   applyTempStyle: (colorHexadecimal: any) => void;
   move: (x: any, y: any) => void;
 
-  constructor(x, y, width, height, type) {
+  constructor(x, y, width, height, type?) {
 
     this.x = x;
     this.y = y;
@@ -23,11 +23,15 @@ export class Rectangle {
 
 }
 
-Rectangle.prototype.cross = function (rectange) {
-  return (this.x < rectange.x + rectange.ancho &&
-    this.x + this.ancho > rectange.x &&
-    this.y < rectange.y + rectange.alto &&
-    this.alto + this.y > rectange.y) ? true : false;
+Rectangle.prototype.cross = function (rectangle) {
+  // console.log('----------------- 1 -----------------', this);
+  // console.log('----------------- 2 -----------------', rectangle);
+  
+  return (this.x < rectangle.x + rectangle.width &&
+    this.x + this.width > rectangle.x &&
+    this.y < rectangle.y + rectangle.height &&
+    this.height + this.y > rectangle.y) ? true : false;
+
 }
 
 Rectangle.prototype.applyTempStyle = function (hexColor) {
@@ -41,8 +45,8 @@ Rectangle.prototype.applyTempStyle = function (hexColor) {
   document.getElementById(this.idHTML).style.position = "absolute";
   document.getElementById(this.idHTML).style.left = this.x + "px";
   document.getElementById(this.idHTML).style.top = this.y + "px";
-  document.getElementById(this.idHTML).style.width = this.ancho + "px";
-  document.getElementById(this.idHTML).style.height = this.alto + "px";
+  document.getElementById(this.idHTML).style.width = this.width + "px";
+  document.getElementById(this.idHTML).style.height = this.height + "px";
   document.getElementById(this.idHTML).style.zIndex = "5";
 }
 

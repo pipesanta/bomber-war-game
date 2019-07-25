@@ -3,14 +3,15 @@ import { Observable } from 'rxjs/Observable';
 import * as Rx from 'rxjs';
 import { GatewayService } from '../api/gateway.service';
 import {
-  getAllMessages,
-  sendMessage,
-  onMessageArriveSubscription
+  loginToGame,
+  playerUpdates
 } from './gql/udeaBombWar.js';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class UdeaBombWarService {
+
+  static COMMAND_EXPLOIT_BOMB = 1;
 
   screenSizeChanged$ = new BehaviorSubject(undefined);
   commands$ = new BehaviorSubject(undefined);
@@ -21,35 +22,28 @@ export class UdeaBombWarService {
 
    }
 
-   getAllMessages$() {
-    return this.gateway.apollo
-      .query<any>({
-        query: getAllMessages,
-        fetchPolicy: 'network-only',
-        errorPolicy: 'all'
-      });
-  }
 
-  sendMessage$(message: string){
+  loginToGame$(){
     return this.gateway.apollo
     .mutate<any>({
-      mutation: sendMessage,
-      variables: {
-        msg: message
-      },
+      mutation: loginToGame,
       errorPolicy: 'all'
     });
   }
 
-  listenMessageArrive$(){
+  listenNewPlayersArrival$(){
     return this.gateway.apollo
     .subscribe({
-      query: onMessageArriveSubscription
+      query: playerUpdates
     });
   }
 
   publishSizeChangedEvent(width, height){
     this.screenSizeChanged$.next({width, height})
+  }
+
+  publishCommand(command){
+    this.commands$.next(command);
   }
 
 

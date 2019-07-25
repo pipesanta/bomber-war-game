@@ -117,8 +117,8 @@ class EventStoreService {
     return {
 
       //Sample for handling event-sourcing events, please remove
-      anonymousMessageArrived: {
-        fn: UdeaBombWarEventConsumer.handleAnonymousMessageArrived$,
+      newPlayerArrived: {
+        fn: UdeaBombWarEventConsumer.handlenewPlayerArrived$,
         obj: UdeaBombWarEventConsumer
       }
     };
@@ -132,8 +132,8 @@ class EventStoreService {
 
       //Sample for assoc events and aggregates, please remove
       {
-        aggregateType: "ChatMessage",
-        eventType: "anonymousMessageArrived"
+        aggregateType: "Player",
+        eventType: "newPlayerArrived"
       }
     ]
   }

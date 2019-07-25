@@ -1,19 +1,21 @@
 import gql from "graphql-tag";
 
-export const getAllMessages = gql`
-query getAllMessages{
-  getMessages
+
+export const loginToGame = gql`
+mutation loginToGame{
+  loginToGame{
+    code
+    user_id
+    character
+  } 
 }
 `;
 
-export const sendMessage = gql`
-mutation sendMessage($msg: String!) {
-    sendMessage(msg: $msg) 
-}
-`;
-
-export const onMessageArriveSubscription = gql `
+export const playerUpdates = gql `
 subscription{
-  onNewMsgArrived
+  playerUpdates{
+    user_id
+    character
+  }
 }`;
 

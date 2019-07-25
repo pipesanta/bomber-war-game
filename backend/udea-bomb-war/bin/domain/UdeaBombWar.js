@@ -4,6 +4,7 @@ const Rx = require("rxjs");
 const eventSourcing = require("../tools/EventSourcing")();
 const Event = require("@nebulae/event-store").Event;
 const UdeaBombWarDA = require("../data/UdeaBombWar");
+const uuidv4 = require('uuid/v4');
 
 
 /**
@@ -15,33 +16,25 @@ class UdeaBombWar {
   constructor() {
   }
 
-  
-  getMessages$({ args, jwt }, authToken){
-    console.log('Query by all messages');
-    return UdeaBombWarDA.searchAllMessages$()
-    .mergeMap(mongoArrayResul => {
-      return Rx.Observable.from(mongoArrayResul)
-      .map(doc => doc.body)
-    })
-    .toArray()
-    .mergeMap(rawResponse => this.buildSuccessResponse$(rawResponse))
-    .catch(err => this.errorHandler$(err));
-  }
 
-
-  sendMessage$({ args, jwt }, authToken) {    
-    console.log("Sending Message ====>", args);
+  loginToGame$({ args, jwt }, authToken) {
+    console.log("new player at game ====>", args);
+    const player = {
+      code: 200,
+      user_id: uuidv4(),
+      character: Math.floor((Math.random()) * 30) + 1,
+    }
     return eventSourcing.eventStore.emitEvent$(
       new Event({
-        eventType: "anonymousMessageArrived",
+        eventType: "newPlayerArrived",
         eventTypeVersion: 1,
-        aggregateType: "ChatMessage",
+        aggregateType: "Player",
         aggregateId: Date.now(),
-        data: args,
+        data: player,
         user: authToken.preferred_username
       })
-    )    
-      .map(r => { return "Message sent"})
+    )
+      .map(r => player)
       .mergeMap(rawResponse => this.buildSuccessResponse$(rawResponse))
       .catch(err => this.errorHandler$(err));
   }
@@ -54,18 +47,18 @@ class UdeaBombWar {
       .map(err => {
         const exception = { data: null, result: {} };
         const isCustomError = err instanceof CustomError;
-        if(!isCustomError){
+        if (!isCustomError) {
           err = new DefaultError(err)
         }
         exception.result = {
-            code: err.code,
-            error: {...err.getContent()}
-          }
+          code: err.code,
+          error: { ...err.getContent() }
+        }
         return exception;
       });
   }
 
-  
+
   buildSuccessResponse$(rawRespponse) {
     return Rx.Observable.of(rawRespponse)
       .map(resp => {

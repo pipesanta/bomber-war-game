@@ -1,6 +1,17 @@
 import { ASSETS_PATH } from "./Map";
+import { Point } from "./Point";
+import { Rectangle } from "./Rectangle";
+import { any } from "async";
 
 export class Player {
+  checkCollisions: (mapa: any) => void;
+  moveOnMap: (pressedKeys: any[], playerId: string) => void;
+  moveOnLevel: () => void;
+  lead: () => void;
+  animate: () => void;
+  update: (registroTemporal: any, mapa: any, pressedKeys: string[]) => void;
+  leftCollision: boolean;
+  applyStyles: (playerId: string) => void;
   gameState: any;
   width: number;
   height: number;
@@ -11,29 +22,42 @@ export class Player {
   movementSpeed: number;
   xSpeed: number;
   ySpeed: number;
-  movingToUp: boolean;
+  // movingToUp: boolean;
   fallSpeed: number;
   terminalSpeed: number;
   moving: boolean;
   framesAnimation: number;
+  centeredPosition: Point;
+  generalRectangle: Rectangle;
+  topLimit: Rectangle;
+  bottonLimmit: Rectangle;
+  leftLimit: any;
+  rightLimit: Rectangle;
+  topCollision: boolean;
+  bottonCollision: boolean;
+  rightCollision: boolean;
+  pxPositionOnMap: Point;
 
-  constructor(initialPositionPx, gameState, xPosition, yPosition) {
+  htmlDivId;
+
+  constructor(initialPositionPx: Point, gameState, character: number, playerId: string) {
     this.gameState = gameState;
-    this.width = 55;
-    this.height = 55;
+    this.htmlDivId = playerId;
+    this.width = 16;
+    this.height = 16;
 
-    this.spriteSheetPath =  ASSETS_PATH +  "img/personajes48.png";
-    this.character = 5; //elegir personaje
+    this.spriteSheetPath = ASSETS_PATH + "images/characters.png";
+    this.character = character || 4;; //elegir personaje
 
     this.startXSprite = 0;
     this.startYSprite = this.height * this.character;
 
-    this.movementSpeed = 3;
+    this.movementSpeed = 1;
 
     this.xSpeed = 0;
     this.ySpeed = 0;
 
-    this.movingToUp = false;
+    // this.movingToUp = false;
     // this.saltoBloqueado = false;
     // this.saltoYInicial = 0;
     // this.framesAereosMaximos = 12;
@@ -48,218 +72,248 @@ export class Player {
     this.framesAnimation = 0;
 
     //eliminar decimales y centrar al jugador
-    var xCenter = Math.trunc(dimensiones.ancho / 2 - this.ancho / 2);
-    var yCenter = Math.trunc(dimensiones.alto / 2 - this.alto / 2);
-    this.posicionCentrada = new Punto(centroX, centroY);
-    this.rectanguloGeneral = new Rectangulo(centroX, centroY, this.ancho, this.alto);
+    var xCenter = 500 // Math.trunc(dimensiones.ancho / 2 - this.ancho / 2);
+    var yCenter = 500 // Math.trunc(dimensiones.alto / 2 - this.alto / 2);
+    this.centeredPosition = new Point(xCenter, yCenter);
+    this.generalRectangle = new Rectangle(xCenter, yCenter, this.width, this.height, 'player');
 
-    this.limiteArriba = new Rectangulo(centroX + this.ancho / 3, centroY, this.ancho / 3, 1);
-    this.limiteAbajo = new Rectangulo(centroX + this.ancho / 3, centroY + this.alto - 1, this.ancho / 3, 1);
-    this.limiteIzquierda = new Rectangulo(centroX, centroY + this.alto / 3, 1, this.alto / 3);
-    this.limiteDerecha = new Rectangulo(centroX + this.ancho - 1, centroY + this.alto / 3, 1, this.alto / 3);
+    this.topLimit = new Rectangle(xCenter + this.width / 3, yCenter, this.width / 3, 1);
+    this.bottonLimmit = new Rectangle(xCenter + this.width / 3, yCenter + this.height - 1, this.width / 3, 1);
+    this.leftLimit = new Rectangle(xCenter, yCenter + this.height / 3, 1, this.height / 3);
+    this.rightLimit = new Rectangle(xCenter + this.width - 1, yCenter + this.height / 3, 1, this.height / 3);
 
-    this.colisionArriba = false;
-    this.colisionAbajo = false;
-    this.colisionIzquierda = false;
-    this.colisionDerecha = false;
+    this.topCollision = false;
+    this.bottonCollision = false;
+    this.leftCollision = false;
+    this.rightCollision = false;
 
     //convertir positivos en negativos y viceversa
-    posicionInicialEnPixeles.x *= -1;
-    posicionInicialEnPixeles.y *= -1;
+    initialPositionPx.x *= -1;
+    initialPositionPx.y *= -1;
 
-    this.posicionEnMapaEnPixeles = new Punto(this.posicionCentrada.x + posicionInicialEnPixeles.x,
-      this.posicionCentrada.y + posicionInicialEnPixeles.y);
+    this.pxPositionOnMap = new Point(this.centeredPosition.x + initialPositionPx.x,
+      this.centeredPosition.y + initialPositionPx.y);
 
-    this.aplicarEstilos();
+    this.applyStyles(playerId);
 
 
   }
 }
 
-JugadorMapamundi.prototype.aplicarEstilos = function () {
-  var idHTML = "jugador";
+Player.prototype.applyStyles = function (playerId) {
+
+  const playerDiv = document.createElement('div');
+  playerDiv.setAttribute("id", playerId);
+  document.getElementById('juego').appendChild(playerDiv);
+
+
+  var idHTML = playerId;
   //document.getElementById(idHTML).style.backgroundColor = "white";
   document.getElementById(idHTML).style.position = "absolute";
-  document.getElementById(idHTML).style.left = this.posicionCentrada.x + "px";
-  document.getElementById(idHTML).style.top = this.posicionCentrada.y + "px";
-  document.getElementById(idHTML).style.width = this.ancho + "px";
-  document.getElementById(idHTML).style.height = this.alto + "px";
+  document.getElementById(idHTML).style.left = this.centeredPosition.x + "px";
+  document.getElementById(idHTML).style.top = this.centeredPosition.y + "px";
+  document.getElementById(idHTML).style.width = this.width + "px";
+  document.getElementById(idHTML).style.height = this.height + "px";
   document.getElementById(idHTML).style.zIndex = "10";
-  document.getElementById(idHTML).style.background = "url('" + this.rutaHojaSprites + "')";
-  document.getElementById(idHTML).style.backgroundPosition = "-" + this.origenXSprite + "px -" + this.origenYSprite + "px";
+  document.getElementById(idHTML).style.background = `url(${this.spriteSheetPath})`;
+  document.getElementById(idHTML).style.backgroundPosition = "-" + this.startXSprite + "px -" + this.startYSprite + "px";
   document.getElementById(idHTML).style.backgroundClip = "border-box";
   document.getElementById(idHTML).style.outline = "1px solid transparent";
 }
 
-JugadorMapamundi.prototype.comprobarColisiones = function (mapa) {
-  this.colisionArriba = false;
-  this.colisionAbajo = false;
-  this.colisionIzquierda = false;
-  this.colisionDerecha = false;
+Player.prototype.checkCollisions = function (map) {
+  this.topCollision = false;
+  this.bottonCollision = false;
+  this.leftCollision = false;
+  this.rightCollision = false;
 
-  if (!this.limiteArriba.cruza(mapa.limiteMapa)) {
-    this.colisionArriba = true;
+  if (!this.topLimit.cross(map.mapLimit)) {
+    console.log('SE DIO EN EL LIMITE SUPERIOR');
+    this.topCollision = true;
   }
-  if (!this.limiteAbajo.cruza(mapa.limiteMapa)) {
-    this.colisionAbajo = true;
+  if (!this.bottonLimmit.cross(map.mapLimit)) {
+    console.log('SE DIO EN EL LIMITE INFERIOR');
+    this.bottonCollision = true;
   }
-  if (!this.limiteIzquierda.cruza(mapa.limiteMapa)) {
-    this.colisionIzquierda = true;
+  if (!this.leftLimit.cross(map.mapLimit)) {
+    console.log('SE DIO EN EL LIMITE IZQUIERDO');
+    this.leftCollision = true;
   }
-  if (!this.limiteDerecha.cruza(mapa.limiteMapa)) {
-    this.colisionDerecha = true;
+  if (!this.rightLimit.cross(map.mapLimit)) {
+    console.log('SE DIO EN EL LIMITE DERECHO');
+    this.rightCollision = true;
   }
 
-  for (var i = 0; i < mapa.rectangulosColisiones.length; i++) {
-    var traduccionTemporalColision = new Rectangulo(
-      mapa.rectangulosColisiones[i].x + mapa.posicion.x,
-      mapa.rectangulosColisiones[i].y + mapa.posicion.y,
-      mapa.rectangulosColisiones[i].ancho,
-      mapa.rectangulosColisiones[i].alto
+  for (let i = 0; i < map.rectanglesCollisions.length; i++) {
+
+    var temporalCollisionRef = new Rectangle(
+      map.rectanglesCollisions[i].x + map.position.x,
+      map.rectanglesCollisions[i].y + map.position.y,
+      map.rectanglesCollisions[i].width,
+      map.rectanglesCollisions[i].height
     );
 
-    if (this.limiteArriba.cruza(traduccionTemporalColision)) {
-      this.colisionArriba = true;
+    if (this.topLimit.cross(temporalCollisionRef)) {
+      console.log('CONTACTO CON CAPA DE COLISIONES EN PARTE SUPERIOR');
+
+      this.topCollision = true;
     }
-    if (this.limiteAbajo.cruza(traduccionTemporalColision)) {
-      this.colisionAbajo = true;
+    if (this.bottonLimmit.cross(temporalCollisionRef)) {
+      console.log('CONTACTO CON CAPA DE COLISIONES EN PARTE INFERIOR');
+      this.bottonCollision = true;
     }
-    if (this.limiteIzquierda.cruza(traduccionTemporalColision)) {
-      this.colisionIzquierda = true;
+    if (this.leftLimit.cross(temporalCollisionRef)) {
+      console.log('CONTACTO CON CAPA DE COLISIONES EN PARTE IZQUIERDO');
+      this.leftCollision = true;
     }
-    if (this.limiteDerecha.cruza(traduccionTemporalColision)) {
-      this.colisionDerecha = true;
+    if (this.rightLimit.cross(temporalCollisionRef)) {
+      console.log('CONTACTO CON CAPA DE COLISIONES EN PARTE DERECHO');
+      this.rightCollision = true;
     }
   }
 }
 
-JugadorMapamundi.prototype.moverEnMapamundi = function () {
-  this.velocidadX = 0;
-  this.velocidadY = 0;
+Player.prototype.moveOnMap = function (pressedKeys: any[]) {
 
-  if (!this.colisionArriba && teclado.teclaPulsada(controlesTeclado.arriba)) {
-    this.velocidadY += this.velocidadMovimiento;
+  this.xSpeed = 0;
+  this.ySpeed = 0;
+
+  if (!this.topCollision && pressedKeys.includes('KeyW')) {
+    this.ySpeed += this.movementSpeed;
   }
-  if (!this.colisionAbajo && teclado.teclaPulsada(controlesTeclado.abajo)) {
-    this.velocidadY -= this.velocidadMovimiento;
+  if (!this.bottonCollision && pressedKeys.includes('KeyS')) {
+    this.ySpeed -= this.movementSpeed;
   }
-  if (!this.colisionIzquierda && teclado.teclaPulsada(controlesTeclado.izquierda)) {
-    this.velocidadX += this.velocidadMovimiento;
+  if (!this.leftCollision && pressedKeys.includes('KeyA')) {
+    this.xSpeed += this.movementSpeed;
   }
-  if (!this.colisionDerecha && teclado.teclaPulsada(controlesTeclado.derecha)) {
-    this.velocidadX -= this.velocidadMovimiento;
+  if (!this.rightCollision && pressedKeys.includes('KeyD')) {
+    this.xSpeed -= this.movementSpeed;
   }
 
-  this.posicionEnMapaEnPixeles.x += this.velocidadX;
-  this.posicionEnMapaEnPixeles.y += this.velocidadY;
+  this.pxPositionOnMap.x -= this.xSpeed;
+  this.pxPositionOnMap.y -= this.ySpeed;
+
+
+  document.getElementById(this.htmlDivId).style.transform = 'translate3d(' + '- ' + this.pxPositionOnMap.x + 'px, ' + '-' + this.pxPositionOnMap.y + 'px, 0' + ')';
+
+  document.getElementById(this.htmlDivId).style.left = this.pxPositionOnMap.x + "px";
+  document.getElementById(this.htmlDivId).style.top = this.pxPositionOnMap.y + "px";
+
+
+
+
+
 }
 
-JugadorMapamundi.prototype.moverEnNivel = function () {
-  this.velocidadX = 0;
-  this.velocidadY = 0;
+// Player.prototype.moveOnLevel = function () {
+//   this.velocidadX = 0;
+//   this.velocidadY = 0;
 
-  if (this.saltoBloqueado && this.colisionAbajo && !teclado.teclaPulsada(controlesTeclado.saltar)) {
-    this.saltoBloqueado = false;
-    this.velocidadCaida = 0;
-    console.log();
+//   if (this.saltoBloqueado && this.colisionAbajo && !teclado.teclaPulsada(controlesTeclado.saltar)) {
+//     this.saltoBloqueado = false;
+//     this.velocidadCaida = 0;
+//     console.log();
+//   }
+
+//   if (!this.saltoBloqueado && teclado.teclaPulsada(controlesTeclado.saltar)) {
+//     this.subiendo = true;
+//     this.saltoBloqueado = true;
+//   }
+
+//   if (!this.colisionArriba && this.subiendo) {
+//     this.framesAereos--;
+//     this.velocidadY = 1 * this.velocidadMovimiento + this.framesAereos;
+
+//     if (this.framesAereos <= 0) {
+//       this.subiendo = false;
+//       this.framesAereos = this.framesAereosMaximos;
+//     }
+//   }
+
+//   if (!this.colisionAbajo && !this.subiendo) {
+//     this.velocidadY = Math.round(-this.velocidadCaida);
+//     console.log(this.velocidadY);
+//     if (this.velocidadCaida < this.velocidadTerminal) {
+//       this.velocidadCaida += 0.3;
+//     }
+//   }
+
+//   if (!this.colisionIzquierda && teclado.teclaPulsada(controlesTeclado.izquierda)) {
+//     this.velocidadX = 1 * this.velocidadMovimiento;
+//   }
+
+//   if (!this.colisionDerecha && teclado.teclaPulsada(controlesTeclado.derecha)) {
+//     this.velocidadX = -1 * this.velocidadMovimiento;
+//   }
+
+//   this.posicionEnMapaEnPixeles.x += this.velocidadX;
+//   this.posicionEnMapaEnPixeles.y += this.velocidadY;
+// }
+
+Player.prototype.lead = function () {
+  if (this.xSpeed < 0) { //izquierda
+    this.startXSprite = this.width * 3;
+  }
+  if (this.xSpeed > 0) { //derecha
+    this.startXSprite = this.width * 3;
+  }
+  if (this.ySpeed < 0) { //abajo
+    this.startXSprite = 0;
+  }
+  if (this.ySpeed > 0) { //arriba
+    this.startXSprite = this.width * 6;
+
   }
 
-  if (!this.saltoBloqueado && teclado.teclaPulsada(controlesTeclado.saltar)) {
-    this.subiendo = true;
-    this.saltoBloqueado = true;
-  }
-
-  if (!this.colisionArriba && this.subiendo) {
-    this.framesAereos--;
-    this.velocidadY = 1 * this.velocidadMovimiento + this.framesAereos;
-
-    if (this.framesAereos <= 0) {
-      this.subiendo = false;
-      this.framesAereos = this.framesAereosMaximos;
-    }
-  }
-
-  if (!this.colisionAbajo && !this.subiendo) {
-    this.velocidadY = Math.round(-this.velocidadCaida);
-    console.log(this.velocidadY);
-    if (this.velocidadCaida < this.velocidadTerminal) {
-      this.velocidadCaida += 0.3;
-    }
-  }
-
-  if (!this.colisionIzquierda && teclado.teclaPulsada(controlesTeclado.izquierda)) {
-    this.velocidadX = 1 * this.velocidadMovimiento;
-  }
-
-  if (!this.colisionDerecha && teclado.teclaPulsada(controlesTeclado.derecha)) {
-    this.velocidadX = -1 * this.velocidadMovimiento;
-  }
-
-  this.posicionEnMapaEnPixeles.x += this.velocidadX;
-  this.posicionEnMapaEnPixeles.y += this.velocidadY;
-}
-
-JugadorMapamundi.prototype.dirigir = function () {
-  if (this.velocidadX < 0) { //izquierda
-    this.origenXSprite = this.ancho * 3;
-  }
-  if (this.velocidadX > 0) { //derecha
-    this.origenXSprite = this.ancho * 3;
-  }
-  if (this.velocidadY < 0) { //abajo
-    this.origenXSprite = 0;
-  }
-  if (this.velocidadY > 0) { //arriba
-    this.origenXSprite = this.ancho * 6;
-  }
-
-  if (this.velocidadX > 0) { //derecha
+  if (this.xSpeed > 0) { //derecha
     document.getElementById("jugador").style.transform = "scaleX(-1)";
   }
-  if (this.velocidadX < 0 || this.velocidadY < 0 || this.velocidadY > 0) { //izquierda
+  if (this.xSpeed < 0 || this.ySpeed < 0 || this.ySpeed > 0) { //izquierda
     document.getElementById("jugador").style.transform = "scaleX(1)";
   }
 
-  document.getElementById("jugador").style.backgroundPosition = "-" + this.origenXSprite + "px -" + this.origenYSprite + "px";
+  document.getElementById("jugador").style.backgroundPosition = "-" + this.startXSprite + "px -" + this.startYSprite + "px";
+
 }
 
-JugadorMapamundi.prototype.animar = function () {
-  if (this.velocidadX == 0 && this.velocidadY == 0) {
-    this.framesAnimacion = 0;
+Player.prototype.animate = function () {
+  if (this.xSpeed == 0 && this.ySpeed == 0) {
+    this.framesAnimation = 0;
     return;
   }
 
-  this.framesAnimacion++;
+  this.framesAnimation++;
 
-  let paso1 = 10;
-  let paso2 = 20;
-  let origenXSpriteTemporal = this.origenXSprite;
+  let step1 = 10;
+  let step2 = 20;
+  let tempStartXSpride = this.startXSprite;
 
-  if (this.framesAnimacion > 0 && this.framesAnimacion < paso1) {
-    origenXSpriteTemporal += this.ancho;
+  if (this.framesAnimation > 0 && this.framesAnimation < step1) {
+    tempStartXSpride += this.width;
   }
-  if (this.framesAnimacion >= paso1 && this.framesAnimacion < paso2) {
-    origenXSpriteTemporal += this.ancho * 2;
+  if (this.framesAnimation >= step1 && this.framesAnimation < step2) {
+    tempStartXSpride += this.width * 2;
   }
-  if (this.framesAnimacion == paso2) {
-    this.framesAnimacion = 0;
+  if (this.framesAnimation == step2) {
+    this.framesAnimation = 0;
   }
 
-  document.getElementById("jugador").style.backgroundPosition = "-" + origenXSpriteTemporal + "px -" + this.origenYSprite + "px";
+  document.getElementById("jugador").style.backgroundPosition = "-" + tempStartXSpride + "px -" + this.startYSprite + "px";
 }
 
-JugadorMapamundi.prototype.actualizar = function (registroTemporal, mapa) {
-  if (this.estadoJuego == listadoEstados.MAPAMUNDI) {
-    this.comprobarColisiones(mapa);
-    this.moverEnMapamundi();
-    this.dirigir();
-    this.animar();
-  }
+Player.prototype.update = function (timestamp, map, pressedKeys) {
+  // if (this.gameState === 0) {
+  this.checkCollisions(map);
+  this.moveOnMap(pressedKeys );
+  this.lead();
+  this.animate();
+  // }
 
-  if (this.estadoJuego == listadoEstados.NIVEL) {
-    this.comprobarColisiones(mapa);
-    this.moverEnNivel();
-    this.dirigir();
-    this.animar();
-  }
+  // if (this.estadoJuego == listadoEstados.NIVEL) {
+  //   this.comprobarColisiones(mapa);
+  //   this.moverEnNivel();
+  //   this.dirigir();
+  //   this.animar();
+  // }
 }

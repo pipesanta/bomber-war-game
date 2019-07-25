@@ -40,7 +40,7 @@ module.exports = {
   Mutation: {
     placeBomb(root, args, context) {
       return context.broker.forwardAndGetReply$(
-        "bomb",
+        "Bomb",
         "gateway.graphql.mutation.placeBomb",
         { root, args, jwt: context.encodedToken },
         2000
@@ -49,7 +49,19 @@ module.exports = {
         // .catch(err => handleError$(err, "persistBasicInfoTag"))
         .mergeMap(response => getResponseFromBackEnd$(response))
         .toPromise();
-    }
+    },
+    loginToGame(root, args, context) {
+      return context.broker.forwardAndGetReply$(
+        "Bomb",
+        "gateway.graphql.mutation.loginToGame",
+        { root, args, jwt: context.encodedToken },
+        2000
+      )
+      // return Rx.Observable.of({ result: { code: 200 }, data: 'texto de confirmacion' })
+        // .catch(err => handleError$(err, "persistBasicInfoTag"))
+        .mergeMap(response => getResponseFromBackEnd$(response))
+        .toPromise();
+    },
   },
   // SUBSCRIPTIONS ///////
   Subscription: {

@@ -128,12 +128,8 @@ class GraphQlService {
   getSubscriptionDescriptors() {   
     return [
       {
-        aggregateType: "ChatMessage",
-        messageType: "gateway.graphql.query.getMessages"
-      },
-      {
-        aggregateType: "ChatMessage",
-        messageType: "gateway.graphql.mutation.sendMessage"
+        aggregateType: "Bomb",
+        messageType: "gateway.graphql.mutation.loginToGame"
       }
     ];
   }
@@ -143,12 +139,8 @@ class GraphQlService {
    */
   generateFunctionMap() {    
     return {
-      "gateway.graphql.query.getMessages": {
-        fn: UdeaBombWar.getMessages$,
-        obj: UdeaBombWar
-      },
-      "gateway.graphql.mutation.sendMessage": {
-        fn: UdeaBombWar.sendMessage$,
+      "gateway.graphql.mutation.loginToGame": {
+        fn: UdeaBombWar.loginToGame$,
         obj: UdeaBombWar
       }
     };
