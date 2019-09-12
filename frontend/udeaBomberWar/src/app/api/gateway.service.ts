@@ -15,7 +15,7 @@ export class GatewayService {
     private httpLink: HttpLink,
   ) {
 
-    const host = "192.168.1.14";
+    const host = "192.168.34.56";
     
     // HTTP end-point
     const http = httpLink.create({ uri: `http://${host}:3000/api/gateway/graphql/http` });

@@ -4,7 +4,8 @@ import * as Rx from 'rxjs';
 import { GatewayService } from '../api/gateway.service';
 import {
   loginToGame,
-  playerUpdates
+  playerUpdates,
+  notifyPlayerUpdates
 } from './gql/udeaBombWar.js';
 import { BehaviorSubject } from 'rxjs';
 
@@ -35,6 +36,17 @@ export class UdeaBombWarService {
     return this.gateway.apollo
     .subscribe({
       query: playerUpdates
+    });
+  }
+
+  notifyUpdates(id, x, y){
+    return this.gateway.apollo
+    .mutate<any>({
+      mutation: notifyPlayerUpdates,
+      variables: {
+        id, x, y
+      },
+      errorPolicy: 'all'
     });
   }
 

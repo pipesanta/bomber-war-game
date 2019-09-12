@@ -130,7 +130,12 @@ class GraphQlService {
       {
         aggregateType: "Bomb",
         messageType: "gateway.graphql.mutation.loginToGame"
-      }
+      },
+      {
+        aggregateType: "Player",
+        messageType: "gateway.graphql.mutation.notifyPlayerUpdates"
+      },
+      
     ];
   }
 
@@ -142,7 +147,12 @@ class GraphQlService {
       "gateway.graphql.mutation.loginToGame": {
         fn: UdeaBombWar.loginToGame$,
         obj: UdeaBombWar
-      }
+      },
+      "gateway.graphql.mutation.notifyPlayerUpdates": {
+        fn: UdeaBombWar.notifyPlayerUpdates$,
+        obj: UdeaBombWar
+      },
+
     };
   }
 

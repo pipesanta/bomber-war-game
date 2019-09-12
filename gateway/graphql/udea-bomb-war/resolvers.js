@@ -62,6 +62,18 @@ module.exports = {
         .mergeMap(response => getResponseFromBackEnd$(response))
         .toPromise();
     },
+    notifyPlayerUpdates(root, args, context) {
+      return context.broker.forwardAndGetReply$(
+        "Player",
+        "gateway.graphql.mutation.notifyPlayerUpdates",
+        { root, args, jwt: context.encodedToken },
+        2000
+      )
+      // return Rx.Observable.of({ result: { code: 200 }, data: 'texto de confirmacion' })
+        // .catch(err => handleError$(err, "persistBasicInfoTag"))
+        .mergeMap(response => getResponseFromBackEnd$(response))
+        .toPromise();
+    },
   },
   // SUBSCRIPTIONS ///////
   Subscription: {

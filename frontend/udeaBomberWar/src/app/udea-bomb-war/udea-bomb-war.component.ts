@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ViewChild } from '@angular/core';
 import { ElementRef } from '@angular/core';
 import { UdeaBombWarService } from './udea-bomb-war.service';
-import { map, filter, debounceTime, tap, takeUntil, mergeMap } from 'rxjs/operators';
-import { fromEvent, Subject, combineLatest, merge, interval } from 'rxjs';
+import { map, filter, debounceTime, tap, takeUntil, mergeMap, timeout, switchMap } from 'rxjs/operators';
+import { fromEvent, Subject, combineLatest, merge, interval, of } from 'rxjs';
 import { MAP_JSON_DATA } from './resources/udeaJsonMap';
 import { Map, ASSETS_PATH } from './entities/Map';
 import { Player } from './entities/Player';
@@ -39,6 +39,8 @@ export class UdeaBombWarComponent implements OnInit {
 
   pressedKeys = [];
 
+  lastPositionReported = {x:0, y:0}
+
 
   constructor(private udeaBombWarService: UdeaBombWarService) {
 
@@ -52,9 +54,10 @@ export class UdeaBombWarComponent implements OnInit {
 
 
 
-    // this.playAudio(ASSETS_PATH + 'audio/soundtrack.mp3');
+    this.playAudio(ASSETS_PATH + 'audio/soundtrack.mp3');
 
     this.initMap();
+    console.log(this.map);
 
     this.initMyUser();
 
@@ -128,7 +131,7 @@ export class UdeaBombWarComponent implements OnInit {
     }
     this.audio.music = new Audio(songPath);
     console.log(this.audio);
-    this.audio.music.play();
+    // this.audio.music.play();
   }
 
   initMap() {
@@ -142,48 +145,71 @@ export class UdeaBombWarComponent implements OnInit {
         filter(response => response),
         tap(response => {
           this.myPlayer = new Player(
-            new Point( Math.floor(Math.random() * 150), Math.floor(Math.random() * 150)),
+            new Point(Math.floor(Math.random() * 150), Math.floor(Math.random() * 150)),
             0, response.character, response.user_id
           );
-
+          this.publishPositions();
         }),
-        mergeMap(() => interval(15)),
+        mergeMap(() => interval(20)),
         tap(() => {
           this.myPlayer.update(Date.now(), this.map, this.pressedKeys)
-        }),
+        }),     
         takeUntil(this.ngUnsubscribe)
       ).subscribe();
-
-
-
-  }
-
-  listenPlayersArrival(){
-    this.udeaBombWarService.listenNewPlayersArrival$()
-    .pipe(
-     
-      takeUntil(this.ngUnsubscribe)
-    ).subscribe((response: any) => {
-      const player  = this.players.find(p => p.htmlDivId === response.user_id);
-      if(!player){
-        const newPlayer = new Player(
-          new Point( Math.floor(Math.random() * 150), Math.floor(Math.random() * 150)),
-          0, response.character, response.user_id
-        );
-        this.players.push(newPlayer);        
-      } else{
-
-        const xRandon = Math.floor(Math.random() * 150);
-        const yRandon = Math.floor(Math.random() * 150);
-
-
-        document.getElementById(response.user_id).style.transform = 'translate3d(' + '- ' + xRandon + 'px, ' + '-' + yRandon + 'px, 0' + ')';
-
-        document.getElementById(response.user_id).style.left = xRandon + "px";
-        document.getElementById(response.user_id).style.top = yRandon + "px";
       }
-    })
+
+  publishPositions(){
+    interval(50)
+      .pipe(
+        filter(() => {
+          return  this.lastPositionReported.x !== this.myPlayer.pxPositionOnMap.x &&
+          this.lastPositionReported.y !== this.myPlayer.pxPositionOnMap.y
+        }),
+        switchMap(() => {
+
+        this.lastPositionReported = {
+          x: this.myPlayer.pxPositionOnMap.x,
+          y: this.myPlayer.pxPositionOnMap.y
+        }
+         return this.udeaBombWarService.notifyUpdates(
+           this.myPlayer.htmlDivId, 
+           this.myPlayer.pxPositionOnMap.x,
+           this.myPlayer.pxPositionOnMap.y)
+        })
+      ).subscribe()
+    
   }
+
+  listenPlayersArrival() {
+    this.udeaBombWarService.listenNewPlayersArrival$()
+      .pipe(
+        map(r => (r.data || {}).playerUpdates ),
+        takeUntil(this.ngUnsubscribe)
+      ).subscribe((response: any) => {
+        // console.log(response);
+        
+        const player = this.players.find(p => p.htmlDivId === response.user_id);
+        if (!player) {
+          const newPlayer = new Player(
+            new Point(Math.floor(Math.random() * 150), Math.floor(Math.random() * 150)),
+            0, response.character, response.user_id
+          );
+          this.players.push(newPlayer);
+        } else {
+
+          const xRandon = response.xPosition;
+          const yRandon = response.yPosition;
+
+
+          document.getElementById(response.user_id).style.transform = 'translate3d(' + '- ' + xRandon + 'px, ' + '-' + yRandon + 'px, 0' + ')';
+
+          document.getElementById(response.user_id).style.left = xRandon + "px";
+          document.getElementById(response.user_id).style.top = yRandon + "px";
+        }
+      })
+  }
+
+
 
   putBombOnMap(id, timestampToExploit) {
     const bomb = {

@@ -267,13 +267,13 @@ Player.prototype.lead = function () {
   }
 
   if (this.xSpeed > 0) { //derecha
-    document.getElementById("jugador").style.transform = "scaleX(-1)";
+    document.getElementById(this.htmlDivId).style.transform = "scaleX(-1)";
   }
   if (this.xSpeed < 0 || this.ySpeed < 0 || this.ySpeed > 0) { //izquierda
-    document.getElementById("jugador").style.transform = "scaleX(1)";
+    document.getElementById(this.htmlDivId).style.transform = "scaleX(1)";
   }
 
-  document.getElementById("jugador").style.backgroundPosition = "-" + this.startXSprite + "px -" + this.startYSprite + "px";
+  document.getElementById(this.htmlDivId).style.backgroundPosition = "-" + this.startXSprite + "px -" + this.startYSprite + "px";
 
 }
 
@@ -299,7 +299,7 @@ Player.prototype.animate = function () {
     this.framesAnimation = 0;
   }
 
-  document.getElementById("jugador").style.backgroundPosition = "-" + tempStartXSpride + "px -" + this.startYSprite + "px";
+  document.getElementById(this.htmlDivId).style.backgroundPosition = "-" + tempStartXSpride + "px -" + this.startYSprite + "px";
 }
 
 Player.prototype.update = function (timestamp, map, pressedKeys) {

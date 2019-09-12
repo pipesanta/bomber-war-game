@@ -7,6 +7,10 @@ type Location{
   yTile: Int
 }
 
+type MutationResponse {
+  code: String
+}
+
 input LocationInput{
   xPx: Int
   yPx: Int
@@ -37,6 +41,8 @@ type Player {
   code: String
   user_id: String
   character: Int
+  xPosition: Int
+  yPosition: Int
 }
 
 type LoginToGameResponse {
@@ -54,6 +60,7 @@ type Mutation{
   "Place a bomb"
   placeBomb(bomb: BombInput): Int
   loginToGame: LoginToGameResponse
+  notifyPlayerUpdates(id: String, x: Int, y: Int): MutationResponse
 }
 
 

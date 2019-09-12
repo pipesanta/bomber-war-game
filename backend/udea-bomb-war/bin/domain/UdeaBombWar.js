@@ -18,7 +18,6 @@ class UdeaBombWar {
 
 
   loginToGame$({ args, jwt }, authToken) {
-    console.log("new player at game ====>", args);
     const player = {
       code: 200,
       user_id: uuidv4(),
@@ -35,6 +34,30 @@ class UdeaBombWar {
       })
     )
       .map(r => player)
+      .mergeMap(rawResponse => this.buildSuccessResponse$(rawResponse))
+      .catch(err => this.errorHandler$(err));
+  }
+
+
+  notifyPlayerUpdates$({ args, jwt }, authToken) {
+    const player = {
+      code: 200,
+      user_id: args.id,
+      xPosition: args.x,
+      yPosition: args.y
+
+    }
+    return eventSourcing.eventStore.emitEvent$(
+      new Event({
+        eventType: "newPlayerArrived",
+        eventTypeVersion: 1,
+        aggregateType: "Player",
+        aggregateId: Date.now(),
+        data: player,
+        user: authToken.preferred_username
+      })
+    )
+      .map(r => ({code: 200}))
       .mergeMap(rawResponse => this.buildSuccessResponse$(rawResponse))
       .catch(err => this.errorHandler$(err));
   }
